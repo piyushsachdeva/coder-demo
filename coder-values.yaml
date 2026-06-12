@@ -1,0 +1,24 @@
+coder:
+  env:
+    - name: CODER_PG_CONNECTION_URL
+      valueFrom:
+        secretKeyRef:
+          name: coder-db-url
+          key: url
+    - name: CODER_ACCESS_URL
+      value: "http://23-21-168-106.nip.io"
+    - name: CODER_WILDCARD_ACCESS_URL
+      value: "*.23-21-168-106.nip.io"
+    - name: CODER_OAUTH2_GITHUB_DEFAULT_PROVIDER_ENABLE
+      value: "false"
+  service:
+    type: LoadBalancer
+    externalTrafficPolicy: Cluster
+
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "512Mi"
+    limits:
+      cpu: "1000m"
+      memory: "1024Mi"

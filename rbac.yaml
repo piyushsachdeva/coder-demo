@@ -1,0 +1,63 @@
+# Namespace where the demo app AND the Coder workspace pod will live.
+# The workspace's ServiceAccount is scoped ONLY to this namespace.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: demo-app
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: coder-workspace
+  namespace: demo-app
+---
+# Everything the agent needs to build, deploy, debug, and helm-ify
+# an app -- but ONLY inside demo-app. No cluster-wide verbs.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: coder-workspace-role
+  namespace: demo-app
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "services", "configmaps", "secrets", "events", "persistentvolumeclaims"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: [""]
+    resources: ["pods/log", "pods/exec", "pods/portforward"]
+    verbs: ["get", "create"]
+  - apiGroups: ["apps"]
+    resources: ["deployments", "replicasets", "statefulsets"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["batch"]
+    resources: ["jobs"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: coder-workspace-binding
+  namespace: demo-app
+subjects:
+  - kind: ServiceAccount
+    name: coder-workspace
+    namespace: demo-app
+roleRef:
+  kind: Role
+  name: coder-workspace-role
+  apiGroup: rbac.authorization.k8s.io
+---
+# Lets the Coder control-plane's own ServiceAccount (in the "coder" namespace)
+# provision/manage workspace Deployments+PVCs, but ONLY inside demo-app.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: coder-provisioner-binding
+  namespace: demo-app
+subjects:
+  - kind: ServiceAccount
+    name: coder
+    namespace: coder
+roleRef:
+  kind: Role
+  name: coder-workspace-role
+  apiGroup: rbac.authorization.k8s.io
