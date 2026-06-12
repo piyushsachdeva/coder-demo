@@ -556,6 +556,18 @@ The agent's own shell hits `Forbidden` on `kube-system` — this is the
 "AI agent operating safely inside its boundary" payoff for the video
 (same proof as step 10, but spoken by the agent itself).
 
+![Agent running the sandbox-proof commands](screenshots/18-prompt4-sandbox-commands.png)
+*The agent runs `whoami && pwd`, `kubectl get pods -n demo-app` (success),
+and `kubectl get pods -n kube-system` → `Error from server (Forbidden)`.*
+
+![Agent explaining the sandbox boundary](screenshots/19-prompt4-agent-explanation.png)
+*The agent's own explanation: "The service account has no RBAC permissions
+outside `demo-app`... the sandbox model in one sentence: the workspace is an
+unprivileged Linux user inside a container, with a Kubernetes service account
+scoped by RBAC to a single namespace — it can do everything needed for the
+demo, and nothing outside it."* This line, spoken by the agent, is the
+strongest closing beat in the whole video.
+
 ---
 
 ## Teardown (avoid ongoing AWS cost)
