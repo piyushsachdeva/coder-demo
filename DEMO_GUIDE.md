@@ -89,7 +89,7 @@ kubectl create secret generic coder-db-url -n coder \
   4Gi request doesn't fit — we set 250m/512Mi request, 1 CPU/1Gi limit)
 - Exposes Coder via a LoadBalancer
 - Contains `CODER_ACCESS_URL`/`CODER_WILDCARD_ACCESS_URL` from the **current
-  live deployment** (`23-21-168-106.nip.io`). On a fresh cluster these point
+  live deployment** (`35-174-85-96.nip.io`). On a fresh cluster these point
   at the wrong (old) IP — that's harmless for this first install (Coder will
   still start and become `Running`), because you'll overwrite them with the
   correct new IP in the `helm upgrade` step below.
@@ -153,7 +153,7 @@ password `CoderDemo123!`.
 > otherwise errors with "signup is disabled" since no GitHub OAuth app is
 > configured). Only the password form is shown — that's expected.
 
-> Current live deployment: **http://23-21-168-106.nip.io** —
+> Current live deployment: **http://35-174-85-96.nip.io** —
 > log in with email `itzmario133@gmail.com` / password `CoderDemo123!`
 > (the dashboard will then show your username `admin`).
 
@@ -193,10 +193,26 @@ coder config-ssh --yes
 ## 8. Push the scoped workspace template
 
 `coder-demo/template-kubernetes/main.tf` is the stock Coder Kubernetes
-template with three changes:
+template with these changes:
 - `namespace` default = `demo-app`
 - `service_account_name = "coder-workspace"` (the scoped SA from step 3)
 - startup script installs `kubectl` + `helm`
+- the Claude Code module + `env_from` block that injects the
+  `anthropic-api-key` secret (described in step 11b/c) — already baked into
+  this file
+
+> **Important:** because the Claude Code module is already in `main.tf`,
+> the container spec references the `anthropic-api-key` Kubernetes secret
+> from the moment you push this template. Create that secret **now**, before
+> pushing the template / creating the workspace, by running step 11a below —
+> otherwise the workspace pod will fail to start with
+> `CreateContainerConfigError`.
+>
+> ```bash
+> kubectl create secret generic anthropic-api-key -n demo-app \
+>   --from-literal=ANTHROPIC_API_KEY='sk-ant-...' \
+>   --dry-run=client -o yaml | kubectl apply -f -
+> ```
 
 ```bash
 cd coder-demo/template-kubernetes
@@ -268,18 +284,23 @@ workspace's own shell.*
 This gives the Coder UI a built-in chat tab backed by Claude Code, so you can
 drive the whole demo from the browser instead of an SSH terminal.
 
+> **Already done in step 8:** `template-kubernetes/main.tf` already includes
+> the `env_from` block (a/b below) and the `claude-code` module (c below), and
+> you already created the `anthropic-api-key` secret and pushed the template
+> in step 8. The (a)-(d) sub-steps below are shown for reference — describing
+> what's already in the template/cluster — so skip straight to **(e) Verify**.
+
 **a. Store the Anthropic API key as a Kubernetes Secret** (never put it in
-the template in plaintext):
+the template in plaintext) — *done in step 8*:
 ```bash
 kubectl create secret generic anthropic-api-key -n demo-app \
   --from-literal=ANTHROPIC_API_KEY='sk-ant-...' \
   --dry-run=client -o yaml | kubectl apply -f -
 ```
 
-**b. Inject the secret into the workspace container.** In
-`template-kubernetes/main.tf`, inside the `container` block for
-`kubernetes_deployment_v1.main`, add (next to the existing `CODER_AGENT_TOKEN`
-`env` block):
+**b. Inject the secret into the workspace container** — *already present in
+`main.tf`*. Inside the `container` block for `kubernetes_deployment_v1.main`,
+next to the existing `CODER_AGENT_TOKEN` `env` block:
 ```hcl
 env_from {
   secret_ref {
@@ -288,8 +309,8 @@ env_from {
 }
 ```
 
-**c. Add the Claude Code module.** In the same file, add this resource block
-right before `resource "coder_app" "code-server"`:
+**c. The Claude Code module** — *already present in `main.tf`*, right before
+`resource "coder_app" "code-server"`:
 ```hcl
 module "claude-code" {
   count               = data.coder_workspace.me.start_count
@@ -302,7 +323,9 @@ module "claude-code" {
 }
 ```
 
-**d. Push the template and rebuild the workspace:**
+**d. Push the template and rebuild the workspace** — *already done in step
+8/9*. If you edit `main.tf` further and need to push changes to an existing
+workspace:
 ```bash
 cd template-kubernetes
 coder templates push demo-k8s
