@@ -1,7 +1,7 @@
 # Coder on EKS — Recreate-from-Scratch Demo Guide
 
 Everything below was tested end-to-end. Run the commands in order from
-`/home/baivavb/repos/sponsor-demos`.
+the root of this repo (`coder-demo/`).
 
 ## What you get
 - A small EKS cluster (2x t3.medium)
@@ -17,7 +17,7 @@ Everything below was tested end-to-end. Run the commands in order from
 ## 1. Create the EKS cluster
 
 ```bash
-cd /home/baivavb/repos/sponsor-demos
+cd coder-demo   # repo root
 eksctl create cluster -f eks-coder-cluster.yaml
 ```
 
