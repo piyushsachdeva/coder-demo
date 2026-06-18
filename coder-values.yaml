@@ -6,9 +6,9 @@ coder:
           name: coder-db-url
           key: url
     - name: CODER_ACCESS_URL
-      value: "http://35-174-85-96.nip.io"
+      value: "http://3-220-149-174.nip.io"
     - name: CODER_WILDCARD_ACCESS_URL
-      value: "*.35-174-85-96.nip.io"
+      value: "*.3-220-149-174.nip.io"
     - name: CODER_OAUTH2_GITHUB_DEFAULT_PROVIDER_ENABLE
       value: "false"
   service:

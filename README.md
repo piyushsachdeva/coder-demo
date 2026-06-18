@@ -140,12 +140,12 @@ ACCESS_URL="http://<your-ip-with-dashes>.nip.io"
 
 curl -s -X POST $ACCESS_URL/api/v2/users/first \
   -H "Content-Type: application/json" \
-  -d '{"email":"itzmario133@gmail.com","username":"admin","name":"Admin","password":"CoderDemo123!"}'
+  -d '{"email":"ddd@gmail.com","username":"admin","name":"Admin","password":"CoderDemo123!"}'
 ```
 
 **Open the UI**: visit `$ACCESS_URL` in your browser and log in using the
 **username/password form**. The "Email" field on this form requires a
-valid email format — enter `itzmario133@gmail.com` (NOT `admin`), and
+valid email format — enter `ddd@gmail.com` (NOT `admin`), and
 password `CoderDemo123!`.
 
 > Note: `coder-values.yaml` sets `CODER_OAUTH2_GITHUB_DEFAULT_PROVIDER_ENABLE:
@@ -154,7 +154,7 @@ password `CoderDemo123!`.
 > configured). Only the password form is shown — that's expected.
 
 > Current live deployment: **http://35-174-85-96.nip.io** —
-> log in with email `itzmario133@gmail.com` / password `CoderDemo123!`
+> log in with email `ddd@gmail.com` / password `CoderDemo123!`
 > (the dashboard will then show your username `admin`).
 
 ![Coder login screen](screenshots/01-coder-login.png)
@@ -176,7 +176,7 @@ that won't see your exported env vars:
 ```bash
 TOKEN=$(curl -s -X POST $ACCESS_URL/api/v2/users/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"itzmario133@gmail.com","password":"CoderDemo123!"}' \
+  -d '{"email":"ddd@gmail.com","password":"CoderDemo123!"}' \
   | grep -o '"session_token":"[^"]*"' | cut -d'"' -f4)
 
 export CODER_SESSION_TOKEN=$TOKEN
@@ -241,7 +241,7 @@ kubectl get pod -n demo-app -l app.kubernetes.io/name=coder-workspace \
 ![Workspace running](screenshots/03-workspace-running.png)
 *Workspace `demo-ws` up and "Running", with code-server and a Terminal available.*
 
-## 10. Prove the sandbox (do this on camera)
+## 10. Prove the sandbox 
 
 ```bash
 POD=$(kubectl get pods -n demo-app -l app.kubernetes.io/name=coder-workspace -o jsonpath='{.items[0].metadata.name}')
@@ -256,12 +256,9 @@ kubectl exec -n demo-app "$POD" -- kubectl get pods -n kube-system
 kubectl exec -n demo-app "$POD" -- kubectl get namespaces
 ```
 
-The last two should return `Error from server (Forbidden)`. This is the
-"agent stays in its lane" proof for the video.
+The last two should return `Error from server (Forbidden)`. 
 
-**Even better on camera: run it from inside the workspace terminal itself**
-(via the Coder UI's terminal or `coder ssh demo-ws`), so the audience sees
-the agent's own shell hit the wall:
+(via the Coder UI's terminal or `coder ssh demo-ws`)
 
 ```bash
 whoami && pwd
@@ -401,14 +398,12 @@ From your machine (not the workspace), `scp` the app in — **the SSH host is
 `<workspace-name>.coder`**
 (not `coder.<workspace-name>`):
 ```bash
-scp -r /home/baivavb/repos/sponsor-demos/coder-demo/sample-app \
+scp -r $HOME/coder-demo/sample-app \
   demo-ws.coder:/home/coder/sample-app
 ```
 > If `scp`/`ssh` doesn't work in your environment, run
 > `coder ssh demo-ws` and recreate the two files (`app.py`,
 > `requirements.txt`) directly — they're tiny (shown below).
-
-Files (`/home/baivavb/repos/sponsor-demos/coder-demo/sample-app/`):
 
 `app.py`:
 ```python
@@ -490,7 +485,6 @@ it correctly, and the pod comes up `Ready`. (Don't rely on the agent
 forgetting this — a careful agent will get it right, which would silently
 defeat the "crash" beat if you were counting on it.)
 
-Confirm on camera:
 ```bash
 kubectl get pods -n demo-app
 ```
@@ -501,16 +495,13 @@ kubectl get pods -n demo-app
 `KeyError` and proposed the env var fix. If your run instead comes up
 `Ready`, use the manual-break step below for a guaranteed crash.*
 
-> **Manual step — break it on purpose.** This is more reliable and
-> repeatable on camera than hoping the agent's manifest is broken. After
+> **Manual step — break it on purpose.** After
 > Prompt 1 succeeds, you (the presenter) remove the `APP_MODE` env var from
 > the running Deployment to force `CrashLoopBackOff`:
 > ```bash
 > kubectl set env deployment/sample-app -n demo-app APP_MODE-
 > kubectl get pods -n demo-app -w   # watch it go into CrashLoopBackOff
 > ```
-> Say on camera: "I just broke this deployment myself — now let's see if the
-> agent can figure out what I did and fix it."
 
 > **Start a new chat session before Prompt 2.** A fresh session has no memory
 > of Prompt 1 or the manual break, so it has to genuinely `kubectl
@@ -576,8 +567,7 @@ Show me that you're sandboxed: run `whoami && pwd`, then
 then `helm version`. Explain what the results mean.
 ```
 The agent's own shell hits `Forbidden` on `kube-system` — this is the
-"AI agent operating safely inside its boundary" payoff for the video
-(same proof as step 10, but spoken by the agent itself).
+"AI agent operating safely inside its boundary" 
 
 ![Agent running the sandbox-proof commands](screenshots/18-prompt4-sandbox-commands.png)
 *The agent runs `whoami && pwd`, `kubectl get pods -n demo-app` (success),
@@ -588,8 +578,7 @@ and `kubectl get pods -n kube-system` → `Error from server (Forbidden)`.*
 outside `demo-app`... the sandbox model in one sentence: the workspace is an
 unprivileged Linux user inside a container, with a Kubernetes service account
 scoped by RBAC to a single namespace — it can do everything needed for the
-demo, and nothing outside it."* This line, spoken by the agent, is the
-strongest closing beat in the whole video.
+demo, and nothing outside it."* 
 
 ---
 
